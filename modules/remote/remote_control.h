@@ -13,9 +13,12 @@
 #ifndef REMOTE_CONTROL_H
 #define REMOTE_CONTROL_H
 
+// #define USE_MOUSE // 是否使用鼠标数据,如果不使用可以节省一些空间
+
 #include <stdint.h>
 #include "main.h"
 #include "usart.h"
+#include "general_def.h"
 
 // 用于遥控器数据读取,遥控器数据是一个大小为2的数组
 #define LAST 1
@@ -62,6 +65,7 @@
 
 /* ----------------------- Data Struct ------------------------------------- */
 // 待测试的位域结构体,可以极大提升解析速度
+#ifdef USE_MOUSE
 typedef union
 {
     struct // 用于访问键盘状态
@@ -85,6 +89,8 @@ typedef union
     };
     uint16_t keys; // 用于memcpy而不需要进行强制类型转换
 } Key_t;
+#endif
+
 
 // @todo 当前结构体嵌套过深,需要进行优化
 typedef struct
@@ -100,6 +106,7 @@ typedef struct
         uint8_t switch_left;  // 左侧开关
         uint8_t switch_right; // 右侧开关
     } rc;
+    #ifdef USE_MOUSE
     struct
     {
         int16_t x;
@@ -111,7 +118,9 @@ typedef struct
     Key_t key[3]; // 改为位域后的键盘索引,空间减少8倍,速度增加16~倍
 
     uint8_t key_count[3][16];
-} RC_ctrl_t;
+    #endif
+    DataFreshness_e data_freshness;
+   } RC_ctrl_t;
 
 /* ------------------------- Internal Data ----------------------------------- */
 
@@ -130,4 +139,10 @@ RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle);
  */
 uint8_t RemoteControlIsOnline();
 
+/**
+ * @brief 获取遥控器数据指针,用于其他模块获取遥控器数据
+ *
+ * @return RC_ctrl_t* 遥控器数据指针
+ */
+RC_ctrl_t *RemoteDataGetPtr();
 #endif

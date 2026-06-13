@@ -3,9 +3,7 @@
 
 #include "bsp_usart.h"
 #include "seasky_protocol.h"
-
-#define VISION_RECV_SIZE 18u // 当前为固定值,36字节
-#define VISION_SEND_SIZE 36u
+#include "general_def.h"
 
 #pragma pack(1)
 typedef enum
@@ -37,12 +35,16 @@ typedef enum
 
 typedef struct
 {
-	Fire_Mode_e fire_mode;
-	Target_State_e target_state;
-	Target_Type_e target_type;
+	uint8_t head[2];
+	Target_State_e target_state;  // 0: 不控制(无目标), 1: 控制云台但不开火(跟踪)，2: 控制云台且开火(开火)
+	float target_yaw;
+	float target_yaw_vel;
+	float target_yaw_acc;
+	float target_pitch;
+	float target_pitch_vel;
+	float target_pitch_acc;
+	uint16_t crc16;
 
-	float pitch;
-	float yaw;
 } Vision_Recv_s;
 
 typedef enum
@@ -71,13 +73,16 @@ typedef enum
 
 typedef struct
 {
-	Enemy_Color_e enemy_color;
-	Work_Mode_e work_mode;
-	Bullet_Speed_e bullet_speed;
-
-	float yaw;
-	float pitch;
-	float roll;
+	uint8_t head[2];
+	Work_Mode_e work_mode;		// 0: 空闲, 1: 自瞄, 2: 小符, 3: 大符
+	float q[4];					// wxyz顺序
+	float current_yaw;
+	float current_yaw_vel;
+	float current_pitch;
+	float current_pitch_vel;
+	float bullet_speed;		// 当前弹速,用于统计
+	uint16_t bullet_count;		// 子弹累计发送次数
+	uint16_t crc16;
 } Vision_Send_s;
 #pragma pack()
 
@@ -97,18 +102,30 @@ void VisionSend();
 /**
  * @brief 设置视觉发送标志位
  *
- * @param enemy_color
  * @param work_mode
  * @param bullet_speed
+ * @param bullet_count
  */
-void VisionSetFlag(Enemy_Color_e enemy_color, Work_Mode_e work_mode, Bullet_Speed_e bullet_speed);
+void VisionSetFlag(Work_Mode_e work_mode, Bullet_Speed_e bullet_speed, uint16_t bullet_count);
 
 /**
  * @brief 设置发送数据的姿态部分
  *
  * @param yaw
  * @param pitch
+ * @param yaw_vel
+ * @param pitch_vel
  */
-void VisionSetAltitude(float yaw, float pitch, float roll);
+void VisionSetAltitude(float yaw, float pitch, float yaw_vel, float pitch_vel);
+
+/**
+ * @brief 设置发送数据的四元数部分
+ *
+ * @param w
+ * @param x
+ * @param y
+ * @param z
+ */
+void VisionSetQuaternion(float w, float x, float y, float z);
 
 #endif // !MASTER_PROCESS_H

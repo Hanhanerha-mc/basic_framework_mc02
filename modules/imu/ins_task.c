@@ -18,7 +18,7 @@
 #include "tim.h"
 #include "user_lib.h"
 #include "general_def.h"
-#include "master_process.h"
+#include "vision_process.h"
 #include "arm_math.h"
 
 static INS_t INS;
@@ -168,7 +168,7 @@ void INS_Task(void)
         INS.Roll = QEKF_INS.Roll;
         INS.YawTotalAngle = QEKF_INS.YawTotalAngle;
 
-        VisionSetAltitude(INS.Yaw, INS.Pitch, INS.Roll);
+        VisionSetAltitude(INS.Yaw, INS.Pitch, INS.Gyro[Z], INS.Gyro[Y]);
     }
 
     // temperature control

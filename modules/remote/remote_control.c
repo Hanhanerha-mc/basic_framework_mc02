@@ -14,7 +14,8 @@ static uint8_t rc_init_flag = 0; // 遥控器初始化标志位
 
 // 遥控器拥有的串口实例,因为遥控器是单例,所以这里只有一个,就不封装了
 static USARTInstance *rc_usart_instance;
-static DaemonInstance *rc_daemon_instance;
+static DaemonInstance *rc_online_daemon_instance;
+static DaemonInstance *rc_activity_daemon_instance;    // 用于检查遥控器数据是否有效
 
 /**
  * @brief 矫正遥控器摇杆的值,超过660或者小于-660的值都认为是无效值,置0
@@ -45,6 +46,7 @@ static void sbus_to_rc(const uint8_t *sbus_buf)
     rc_ctrl[TEMP].rc.switch_right = ((sbus_buf[5] >> 4) & 0x0003);     //!< Switch right
     rc_ctrl[TEMP].rc.switch_left = ((sbus_buf[5] >> 4) & 0x000C) >> 2; //!< Switch left
 
+    #ifdef USE_MOUSE
     // 鼠标解析
     rc_ctrl[TEMP].mouse.x = (sbus_buf[6] | (sbus_buf[7] << 8)); //!< Mouse X axis
     rc_ctrl[TEMP].mouse.y = (sbus_buf[8] | (sbus_buf[9] << 8)); //!< Mouse Y axis
@@ -83,6 +85,14 @@ static void sbus_to_rc(const uint8_t *sbus_buf)
         if ((key_with_shift & j) && !(key_last_with_shift & j))
             rc_ctrl[TEMP].key_count[KEY_PRESS_WITH_SHIFT][i]++;
     }
+    #endif
+    
+    // ! 如果要进行按键持续按下的判断，这里得进行更改，目前只是判断了数据是否变化
+    if (memcmp(&rc_ctrl[TEMP], &rc_ctrl[LAST], sizeof(RC_ctrl_t))) // 返回0表示相同,非0表示不同
+    {
+        DaemonReload(rc_activity_daemon_instance);  // 数据活跃,喂狗
+        rc_ctrl[TEMP].data_freshness = DATA_ACTIVE;
+    }
 
     memcpy(&rc_ctrl[LAST], &rc_ctrl[TEMP], sizeof(RC_ctrl_t)); // 保存上一次的数据,用于按键持续按下和切换的判断
 }
@@ -93,7 +103,7 @@ static void sbus_to_rc(const uint8_t *sbus_buf)
  */
 static void RemoteControlRxCallback()
 {
-    DaemonReload(rc_daemon_instance);         // 先喂狗
+    DaemonReload(rc_online_daemon_instance);         // 先喂狗
     sbus_to_rc(rc_usart_instance->recv_buff); // 进行协议解析
 }
 
@@ -108,6 +118,12 @@ static void RCLostCallback(void *id)
     LOGWARNING("[rc] remote control lost");
 }
 
+void RCActivityTimeoutCallback(void *id)
+{
+    rc_ctrl[TEMP].data_freshness = DATA_STALE;
+    rc_ctrl[LAST].data_freshness = DATA_STALE;
+}
+
 RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle)
 {
     USART_Init_Config_s conf;
@@ -117,12 +133,20 @@ RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle)
     rc_usart_instance = USARTRegister(&conf);
 
     // 进行守护进程的注册,用于定时检查遥控器是否正常工作
-    Daemon_Init_Config_s daemon_conf = {
+    Daemon_Init_Config_s online_daemon_conf = {
         .reload_count = 10, // 100ms未收到数据视为离线,遥控器的接收频率实际上是1000/14Hz(大约70Hz)
         .callback = RCLostCallback,
         .owner_id = NULL, // 只有1个遥控器,不需要owner_id
     };
-    rc_daemon_instance = DaemonRegister(&daemon_conf);
+    rc_online_daemon_instance = DaemonRegister(&online_daemon_conf);
+
+    // 进行守护进程的注册,用于定时检查遥控器是否是有效数据
+    Daemon_Init_Config_s activity_daemon_conf = {
+        .reload_count = 160, // 1600ms未收到数据视为目前为非活跃状态
+        .callback = RCActivityTimeoutCallback,
+        .owner_id = NULL, // 只有1个遥控器,不需要owner_id
+    };
+    rc_activity_daemon_instance = DaemonRegister(&activity_daemon_conf);
 
     rc_init_flag = 1;
     return rc_ctrl;
@@ -131,6 +155,11 @@ RC_ctrl_t *RemoteControlInit(UART_HandleTypeDef *rc_usart_handle)
 uint8_t RemoteControlIsOnline()
 {
     if (rc_init_flag)
-        return DaemonIsOnline(rc_daemon_instance);
+        return DaemonIsOnline(rc_online_daemon_instance);
     return 0;
+}
+
+RC_ctrl_t *RemoteDataGetPtr()
+{
+    return rc_ctrl;
 }

@@ -16,7 +16,7 @@ file(GLOB_RECURSE USER_SOURCES CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/bsp/*.c"
         "${CMAKE_SOURCE_DIR}/modules/*.c"
         "${CMAKE_SOURCE_DIR}/application/*.c"
-
+        "${CMAKE_SOURCE_DIR}/application/cmd/*.cpp"
 )
 
 # Add include paths
@@ -26,6 +26,7 @@ file(GLOB_RECURSE USER_HEADERS CONFIGURE_DEPENDS
         "${CMAKE_SOURCE_DIR}/bsp/*.h"
         "${CMAKE_SOURCE_DIR}/modules/*.h"
         "${CMAKE_SOURCE_DIR}/application/*.h"
+        "${CMAKE_SOURCE_DIR}/application/cmd/*.hpp"
 )
 
 set(USER_INCLUDE_DIRS "")

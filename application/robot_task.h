@@ -10,7 +10,7 @@
 #include "ins_task.h"
 #include "motor_task.h"
 #include "referee_task.h"
-#include "master_process.h"
+#include "vision_process.h"
 #include "daemon.h"
 #include "HT04.h"
 #include "buzzer.h"

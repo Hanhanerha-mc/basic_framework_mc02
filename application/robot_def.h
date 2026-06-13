@@ -13,13 +13,13 @@
 #define ROBOT_DEF_H
 
 #include "ins_task.h"
-#include "master_process.h"
+#include "vision_process.h"
 #include "stdint.h"
 
 /* 开发板类型定义,烧录时注意不要弄错对应功能;修改定义后需要重新编译,只能存在一个定义! */
-#define ONE_BOARD // 单板控制整车
+// #define ONE_BOARD // 单板控制整车
 // #define CHASSIS_BOARD //底盘板
-// #define GIMBAL_BOARD  //云台板
+#define GIMBAL_BOARD  //云台板
 
 //#define VISION_USE_VCP  // 使用虚拟串口发送视觉数据
 #define VISION_USE_UART // 使用串口发送视觉数据
@@ -29,12 +29,15 @@
 #define YAW_CHASSIS_ALIGN_ECD 2711  // 云台和底盘对齐指向相同方向时的电机编码器值,若对云台有机械改动需要修改
 #define YAW_ECD_GREATER_THAN_4096 0 // ALIGN_ECD值是否大于4096,是为1,否为0;用于计算云台偏转角度
 #define PITCH_HORIZON_ECD 3412      // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
-#define PITCH_MAX_ANGLE 0           // 云台竖直方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
-#define PITCH_MIN_ANGLE 0           // 云台竖直方向最小角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
+#define PITCH_MAX_ANGLE 20.0f       // 云台竖直方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
+#define PITCH_MIN_ANGLE -27.0f      // 云台竖直方向最小角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
+#define YAW_HORIZON_ECD 0           // 云台水平位置时的编码器值,这里限制的是小YAW的值
+#define YAW_MAX_ANGLE 62.5f         // 云台水平旋转方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
+#define YAW_MIN_ANGLE -62.5f        // 云台水平旋转方向最小角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
 // 发射参数
-#define ONE_BULLET_DELTA_ANGLE 36    // 发射一发弹丸拨盘转动的距离,由机械设计图纸给出
+#define ONE_BULLET_DELTA_ANGLE 45    // 发射一发弹丸拨盘转动的距离,由机械设计图纸给出
 #define REDUCTION_RATIO_LOADER 49.0f // 拨盘电机的减速比,英雄需要修改为3508的19.0f
-#define NUM_PER_CIRCLE 10            // 拨盘一圈的装载量
+#define NUM_PER_CIRCLE 8             // 拨盘一圈的装载量
 // 机器人底盘修改的参数,单位为mm(毫米)
 #define WHEEL_BASE 350              // 纵向轴距(前进后退方向)
 #define TRACK_WIDTH 300             // 横向轮距(左右平移方向)
@@ -154,6 +157,7 @@ typedef struct
 { // 云台角度控制
     float yaw;
     float pitch;
+    float dm_yaw;
     float chassis_rotate_wz;
 
     gimbal_mode_e gimbal_mode;
