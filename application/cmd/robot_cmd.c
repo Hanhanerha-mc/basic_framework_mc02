@@ -228,7 +228,7 @@ static void RemoteControlSet()
     else
         shoot_cmd_send.load_mode = LOAD_STOP;
     // 射频控制,固定每秒1发,后续可以根据左侧拨轮的值大小切换射频,
-    shoot_cmd_send.shoot_rate = 8;
+    shoot_cmd_send.shoot_rate = 12; // 12发/秒,根据实际情况修改
 }
 
 #ifdef USE_MOUSE
@@ -326,8 +326,9 @@ static void MouseKeySet()
  */
 static void EmergencyHandler()
 {
-    // 拨轮的向下拨超过一半进入急停模式.注意向打时下拨轮是正
-    if (rc_data[TEMP].rc.dial > 300 || robot_state == ROBOT_STOP) // 还需添加重要应用和模块离线的判断
+    // TODO 以后可能要进行大一统
+    // 拨轮的左侧下打进入急停模式.注意向打时下拨轮是正
+    if (switch_is_down(rc_data[TEMP].rc.switch_left) || robot_state == ROBOT_STOP) // 还需添加重要应用和模块离线的判断
     {
         robot_state = ROBOT_STOP;
         gimbal_cmd_send.gimbal_mode = GIMBAL_ZERO_FORCE;
@@ -337,8 +338,8 @@ static void EmergencyHandler()
         shoot_cmd_send.load_mode = LOAD_STOP;
         LOGERROR("[CMD] emergency stop!");
     }
-    // 遥控器右侧开关为[上],恢复正常运行
-    if (switch_is_up(rc_data[TEMP].rc.switch_right))
+    // 遥控器左侧开关为[上],恢复正常运行
+    if (switch_is_up(rc_data[TEMP].rc.switch_left))
     {
         robot_state = ROBOT_READY;
         shoot_cmd_send.shoot_mode = SHOOT_ON;
