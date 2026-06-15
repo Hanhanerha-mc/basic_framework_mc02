@@ -6,6 +6,8 @@
 #include "message_center.h"
 #include "general_def.h"
 #include "bmi088.h"
+#include "referee_task.h"
+#include "referee_UI.h"
 
 static attitude_t *gimbal_IMU_data; // 云台IMU数据
 static DJIMotorInstance *yaw_motor, *pitch_motor;
@@ -55,25 +57,25 @@ void GimbalInit()
     Motor_Init_Config_s yaw_config = {
         .can_init_config = {
             .can_handle = &hcan1,
-            .tx_id = 1,
+            .tx_id = 2,
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = 100, // 8
+                .Kp = 60, // 8
                 .Ki = 0,
-                .Kd = 1.5,
-                .DeadBand = 0.1,
-                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = 100,
-                // .Output_LPF_RC = 0.00005,
+                .Kd = 1,
+                .DeadBand = 0,
+                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement | PID_OutputFilter,
+                .IntegralLimit = 0,
+                .Output_LPF_RC = 0.00005,
                 .MaxOut = 2000,
             },
             .speed_PID = {
-                .Kp = 45,  // 50
-                .Ki = 10, // 200
+                .Kp = 50,  // 50
+                .Ki = 50, // 200
                 .Kd = 0,
-                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                // .Output_LPF_RC = 0.00649999983,
+                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement |PID_OutputFilter,
+                .Output_LPF_RC = 0.00649999983,
                 .IntegralLimit = 2000,
                 .MaxOut = 20000,
             },
@@ -93,24 +95,24 @@ void GimbalInit()
     Motor_Init_Config_s pitch_config = {
         .can_init_config = {
             .can_handle = &hcan1,
-            .tx_id = 2,
+            .tx_id = 1,
         },
         .controller_param_init_config = {
             .angle_PID = {
-                .Kp = 100, // 10
-                .Ki = 1,
-                .Kd = 0.3,
+                .Kp = 70, // 10
+                .Ki = 0,
+                .Kd = 1,
                 .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                .IntegralLimit = 0.3,
+                .IntegralLimit = 0,
                 .MaxOut = 1000,
             },
             .speed_PID = {
-                .Kp = 35,  // 50
+                .Kp = 20,  // 50
                 .Ki = 200, // 350
                 .Kd = 0,   // 0
-                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement,
-                // .Output_LPF_RC = 0.00649999983,
-                .IntegralLimit = 4000,
+                .Improve = PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement | PID_OutputFilter,
+                .Output_LPF_RC = 0.00649999983,
+                .IntegralLimit = 2500,
                 .MaxOut = 15000,
             },
             .other_angle_feedback_ptr = &gimbal_IMU_data->Pitch,

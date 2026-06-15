@@ -31,7 +31,7 @@
 #define PITCH_HORIZON_ECD 3412      // 云台处于水平位置时编码器值,若对云台有机械改动需要修改
 #define PITCH_MAX_ANGLE 20.0f       // 云台竖直方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
 #define PITCH_MIN_ANGLE -27.0f      // 云台竖直方向最小角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
-#define YAW_HORIZON_ECD 0           // 云台水平位置时的编码器值,这里限制的是小YAW的值
+#define YAW_HORIZON_ECD 751         // 云台水平位置时的编码器值,这里限制的是小YAW的值
 #define YAW_MAX_ANGLE 62.5f         // 云台水平旋转方向最大角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
 #define YAW_MIN_ANGLE -62.5f        // 云台水平旋转方向最小角度 (注意反馈如果是陀螺仪，则填写陀螺仪的角度)
 // 发射参数

@@ -1,0 +1,34 @@
+
+
+OpenDocument="bsp_can.c", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/bsp/can/bsp_can.c", Line=303
+OpenDocument="dji_motor.c", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/modules/motor/DJImotor/dji_motor.c", Line=191
+OpenDocument="daemon.h", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/modules/daemon/daemon.h", Line=0
+OpenDocument="gimbal.c", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/application/gimbal/gimbal.c", Line=114
+OpenDocument="robot_cmd.c", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/application/cmd/robot_cmd.c", Line=87
+OpenDocument="robot.c", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/application/robot.c", Line=10
+OpenDocument="main.c", FilePath="D:/VScode Workspace/sentry_2027/basic_framework_mc02/Core/Src/main.c", Line=97
+OpenToolbar="Debug", Floating=0, x=0, y=0
+OpenWindow="Call Stack", DockArea=RIGHT, x=0, y=0, w=884, h=233, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Registers 1", DockArea=RIGHT, x=0, y=2, w=884, h=463, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, FilteredItems=[], RefreshRate=1
+OpenWindow="Disassembly", DockArea=RIGHT, x=0, y=1, w=884, h=382, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Watched Data 1", DockArea=LEFT, x=0, y=0, w=937, h=1056, TabPos=0, TopOfStack=1, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Memory Usage", DockArea=LEFT, x=0, y=0, w=937, h=1056, TabPos=1, TopOfStack=0, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+OpenWindow="Data Sampling", DockArea=BOTTOM, x=2, y=0, w=590, h=696, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0, VisibleTab=0, UniformSampleSpacing=0
+OpenWindow="Timeline", DockArea=BOTTOM, x=1, y=0, w=1211, h=696, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=1, DataPaneShown=1, PowerPaneShown=1, CodePaneShown=1, PinCursor="Cursor Movable", TimePerDiv="1 ns / Div", TimeStampFormat="Time", DataGraphDrawAsPoints=0, DataGraphLegendShown=1, DataGraphUniformSampleSpacing=0, DataGraphLegendPosition="913;-91", DataGraphShowNamesAtCursor=0, PowerGraphDrawAsPoints=0, PowerGraphLegendShown=1, PowerGraphAvgFilterTime=Off, PowerGraphAvgFilterLen=Off, PowerGraphUniformSampleSpacing=0, PowerGraphLegendPosition="913;-91", CodeGraphLegendShown=1, CodeGraphLegendPosition="842;0"
+OpenWindow="Console", DockArea=BOTTOM, x=0, y=0, w=1397, h=696, FilterBarShown=0, TotalValueBarShown=0, ToolBarShown=0
+SmartViewPlugin="", Page="", Toolbar="Hidden", Window="SmartView 1"
+TableHeader="Call Stack", SortCol="Function", SortOrder="ASCENDING", VisibleCols=["Function";"Stack Frame";"Source";"PC";"Return Address";"Stack Used"], ColWidths=[273;196;311;131;300;134]
+TableHeader="Data Sampling Table", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time"], ColWidths=[100;100]
+TableHeader="Data Sampling Setup", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Type";"Value";"Min";"Max";"Average";"# Changes";"Min. Change";"Max. Change"], ColWidths=[619;100;105;100;100;127;149;171;171]
+TableHeader="Power Sampling", SortCol="None", SortOrder="ASCENDING", VisibleCols=["Index";"Time";"Ch 0"], ColWidths=[100;100;100]
+TableHeader="Registers 1", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Description"], ColWidths=[103;183;564]
+TableHeader="RegisterSelectionDialog", SortCol="None", SortOrder="ASCENDING", VisibleCols=[], ColWidths=[]
+TableHeader="Watched Data 1", SortCol="Expression", SortOrder="ASCENDING", VisibleCols=["Expression";"Value";"Location";"Refresh";"Type"], ColWidths=[376;313;130;101;404]
+TableHeader="TargetExceptionDialog", SortCol="Name", SortOrder="ASCENDING", VisibleCols=["Name";"Value";"Address";"Description"], ColWidths=[200;100;100;2340]
+WatchedExpression="rc_data", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="gimbal_cmd_send", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="yaw_motor", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="gimbal_cmd_recv", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="pitch_motor", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="pitch_motor", RefreshRate=5, Window=Watched Data 1
+WatchedExpression="dji_motor_instance", RefreshRate=5, Window=Watched Data 1
