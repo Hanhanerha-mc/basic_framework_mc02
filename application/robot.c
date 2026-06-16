@@ -31,8 +31,8 @@ void RobotInit()
 
 #if defined(ONE_BOARD) || defined(GIMBAL_BOARD)
     RobotCMDInit();
-    GimbalInit();
     ShootInit();
+    GimbalInit();
 #endif
 
 #if defined(ONE_BOARD) || defined(CHASSIS_BOARD)

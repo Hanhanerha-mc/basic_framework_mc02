@@ -5,6 +5,7 @@
 #include "remote_control.h"
 #include "ins_task.h"
 #include "vision_process.h"
+#include "navigation_process.h"
 #include "message_center.h"
 #include "general_def.h"
 #include "dji_motor.h"
@@ -38,6 +39,8 @@ static Chassis_Upload_Data_s chassis_fetch_data; // 从底盘应用接收的反�
 static RC_ctrl_t *rc_data;              // 遥控器数据,初始化时返回
 static Vision_Recv_s *vision_recv_data; // 视觉接收数据指针,初始化时返回
 static Vision_Send_s vision_send_data;  // 视觉发送数据
+static Navigation_Recv_s *navigation_recv_data; // 导航控制数据指针,初始化时返回
+static Navigation_Send_s navigation_send_data; // 导航控制发送数据
 
 static Publisher_t *gimbal_cmd_pub;            // 云台控制消息发布者
 static Subscriber_t *gimbal_feed_sub;          // 云台反馈信息订阅者
@@ -58,9 +61,10 @@ BMI088Instance *bmi088_test; // 云台IMU
 BMI088_Data_t bmi088_data;
 void RobotCMDInit()
 {
-    rc_data = RemoteControlInit(&huart5);   // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个
-    vision_recv_data = VisionInit(&huart10); // 视觉通信串口
-    referee_data = UITaskInit(&huart1,&ui_data); // 裁判系统初始化,会同时初始化UI
+    rc_data = RemoteControlInit(&huart5);                         // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个
+    vision_recv_data = VisionInit(&huart10);                               // 视觉通信串口
+    navigation_recv_data = NavigationProcessInit(&huart7);                      // 导航控制
+    referee_data = UITaskInit(&huart1,&ui_data);    // 裁判系统初始化,会同时初始化UI
     // TODO 还需加入导航与裁判系统的串口
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));

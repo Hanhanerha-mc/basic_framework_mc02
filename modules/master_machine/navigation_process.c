@@ -57,19 +57,20 @@ static void NavigationSend()
 
 Navigation_Recv_s* NavigationProcessInit(UART_HandleTypeDef *_handle)
 {
+    // 先注册daemon,否则USARTRegister启动DMA接收后,若RX引脚有噪声,
+    // DecodeNavigation回调会访问尚未初始化的navigation_daemon_instance导致空指针崩溃
+    Daemon_Init_Config_s daemon_conf = {
+        .reload_count = 10,
+        .callback = NavigationOfflineCallback, // 离线时调用的回调函数,会重启串口接收
+        .owner_id = NULL,   // 只有一个导航通信,不需要owner_id
+    };
+    navigation_daemon_instance = DaemonRegister(&daemon_conf);
+
     USART_Init_Config_s conf;
     conf.module_callback = DecodeNavigation;
     conf.recv_buff_size = RECV_PACKET_SIZE;
     conf.usart_handle = _handle;
     navigation_usart_instance = USARTRegister(&conf);
-
-    // 为master process注册daemon,用于判断导航通信是否离线
-    Daemon_Init_Config_s daemon_conf = {
-        .callback = NavigationOfflineCallback, // 离线时调用的回调函数,会重启串口接收
-        .owner_id = navigation_usart_instance,
-        .reload_count = 10,
-    };
-    navigation_daemon_instance = DaemonRegister(&daemon_conf);
 
     return &recv_data;
 }

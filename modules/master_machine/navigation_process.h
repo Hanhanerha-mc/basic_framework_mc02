@@ -3,6 +3,7 @@
 
 #include "bsp_usart.h"
 
+#pragma pack(1)     // 压缩结构体
 typedef enum
 {
     VELOCITY_MODE = 1,
@@ -10,6 +11,7 @@ typedef enum
     SWING_MODE = 3,
     SPIN_MODE = 4,
 } control_mode_e;
+
 
 typedef struct
 {
@@ -24,7 +26,7 @@ typedef struct
     float health;
     float game_mode;
 } Navigation_Send_s;
-
+#pragma pack()
 
 /**
  * @brief 导航进程初始化函数
