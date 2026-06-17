@@ -79,7 +79,7 @@ void RobotCMDInit()
 #ifdef GIMBAL_BOARD
     CANComm_Init_Config_s comm_conf = {
         .can_config = {
-            .can_handle = &hcan1,
+            .can_handle = &hcan2,
             .tx_id = 0x312,
             .rx_id = 0x311,
         },
@@ -155,24 +155,27 @@ static void RemoteControlSet()
             case RC_SW_UP:                                          // 右侧开关状态[上],纯控制小yaw
                 gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
                 chassis_cmd_send.chassis_mode = CHASSIS_NO_FOLLOW;
-                // gimbal_cmd_send.yaw +=0.002f * (float)rc_data[TEMP].rc.rocker_l_;
-                gimbal_cmd_send.yaw = (float)rc_data[TEMP].rc.rocker_l_ / REMOTE_MAX * YAW_MAX_ANGLE + YAW_START_ANGLE;
                 break;
             case RC_SW_MID:                                          // 右侧开关状态[中],小yaw带动大yaw,底盘跟随大yaw
                 gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
                 // chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
-                gimbal_cmd_send.yaw = (float)rc_data[TEMP].rc.rocker_l_ / REMOTE_MAX * YAW_MAX_ANGLE + YAW_START_ANGLE;
                 // TODO 还需补充
                 break;
             case RC_SW_DOWN:
                 gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;        // 右侧开关状态[下],小yaw带动大yaw,小陀螺模式
                 // chassis_cmd_send.chassis_mode = CHASSIS_ROTATE;
-                gimbal_cmd_send.yaw = (float)rc_data[TEMP].rc.rocker_l_ / REMOTE_MAX * YAW_MAX_ANGLE + YAW_START_ANGLE;
                 break;
             default:
                 while(1) LOGERROR("[RemoteControlSet] default case: %d", rc_data[TEMP].rc.switch_right);
         }
+        #define INCREMENTAL_CONTROL // 是否增量控制,如果不开启则为绝对位置控制,需要遥控器摇杆回中时云台回中,开启后则为增量控制,摇杆回中云台保持不动
+        #ifdef INCREMENTAL_CONTROL
+        gimbal_cmd_send.yaw += 0.001f * (float)rc_data[TEMP].rc.rocker_l_;
+        gimbal_cmd_send.pitch += 0.0005f * (float)rc_data[TEMP].rc.rocker_l1;
+        #else
+        gimbal_cmd_send.yaw = (float)rc_data[TEMP].rc.rocker_l_ / REMOTE_MAX * YAW_MAX_ANGLE + YAW_START_ANGLE;
         gimbal_cmd_send.pitch = (float)rc_data[TEMP].rc.rocker_l1 / REMOTE_MAX * (PITCH_MAX_ANGLE - PITCH_MIN_ANGLE) / 2 + (PITCH_MAX_ANGLE + PITCH_MIN_ANGLE) / 2;
+        #endif
     }
     else if (rc_data[TEMP].rc.switch_left == RC_SW_DOWN)                 // 左侧开关状态[下],其他模式
     {
@@ -200,20 +203,20 @@ static void RemoteControlSet()
     // TODO 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
     # define RC_DEADBAND 80
     // 底盘参数,目前没有加入小陀螺(调试似乎暂时没有必要),系数需要调整
-    // if (gimbal_cmd_send.gimbal_mode != GIMBAL_VISION) {
-    //     if (abs(rc_data[TEMP].rc.rocker_r1) < RC_DEADBAND) {
-    //         chassis_cmd_send.vx = 0;
-    //     }
-    //     else {
-    //         chassis_cmd_send.vx = (float)rc_data[TEMP].rc.rocker_r1 / 1.5; // 竖直方向
-    //     }
-    //     if (abs(rc_data[TEMP].rc.rocker_r_) < RC_DEADBAND) {
-    //         chassis_cmd_send.vy = 0;
-    //     }
-    //     else {
-    //         chassis_cmd_send.vy = (float)rc_data[TEMP].rc.rocker_r_ / 1.5; // 水平方向
-    //     }
-    // }
+    if (gimbal_cmd_send.gimbal_mode != GIMBAL_ZERO_FORCE) {
+        if (abs(rc_data[TEMP].rc.rocker_r1) < RC_DEADBAND) {
+            chassis_cmd_send.vx = 0;
+        }
+        else {
+            chassis_cmd_send.vx = (float)rc_data[TEMP].rc.rocker_r1 / 1.5; // 竖直方向
+        }
+        if (abs(rc_data[TEMP].rc.rocker_r_) < RC_DEADBAND) {
+            chassis_cmd_send.vy = 0;
+        }
+        else {
+            chassis_cmd_send.vy = (float)rc_data[TEMP].rc.rocker_r_ / 1.5; // 水平方向
+        }
+    }
 
     // 发射参数
     if (switch_is_up(rc_data[TEMP].rc.switch_right)) // 右侧开关状态[上],弹舱打开

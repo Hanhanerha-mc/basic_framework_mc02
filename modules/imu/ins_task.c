@@ -21,6 +21,8 @@
 #include "vision_process.h"
 #include "arm_math.h"
 
+#define RADIAN_TO_DEGREE 57.295779513f
+
 static INS_t INS;
 static IMU_Param_t IMU_Param;
 static PIDInstance TempCtrl = {0};
@@ -32,7 +34,7 @@ const float zb[3] = {0, 0, 1};
 // 用于获取两次采样之间的时间间隔
 static uint32_t INS_DWT_Count = 0;
 static float dt = 0, t = 0;
-static float RefTemp = 40; // 恒温设定温度
+static float RefTemp = 20; // 恒温设定温度
 
 static void IMU_Param_Correction(IMU_Param_t *param, float gyro[3], float accel[3]);
 
@@ -148,6 +150,8 @@ void INS_Task(void)
         IMU_QuaternionEKF_Update(INS.Gyro[X], INS.Gyro[Y], INS.Gyro[Z], INS.Accel[X], INS.Accel[Y], INS.Accel[Z], dt);
 
         memcpy(INS.q, QEKF_INS.q, sizeof(QEKF_INS.q));
+        INS.Gyro[Z] *= RADIAN_TO_DEGREE;
+        INS.Gyro[Y] *= RADIAN_TO_DEGREE;
 
         // 机体系基向量转换到导航坐标系，本例选取惯性系为导航系
         BodyFrameToEarthFrame(xb, INS.xn, INS.q);
