@@ -150,8 +150,6 @@ void INS_Task(void)
         IMU_QuaternionEKF_Update(INS.Gyro[X], INS.Gyro[Y], INS.Gyro[Z], INS.Accel[X], INS.Accel[Y], INS.Accel[Z], dt);
 
         memcpy(INS.q, QEKF_INS.q, sizeof(QEKF_INS.q));
-        INS.Gyro[Z] *= RADIAN_TO_DEGREE;
-        INS.Gyro[Y] *= RADIAN_TO_DEGREE;
 
         // 机体系基向量转换到导航坐标系，本例选取惯性系为导航系
         BodyFrameToEarthFrame(xb, INS.xn, INS.q);
@@ -172,7 +170,7 @@ void INS_Task(void)
         INS.Roll = QEKF_INS.Roll;
         INS.YawTotalAngle = QEKF_INS.YawTotalAngle;
 
-        VisionSetAltitude(INS.Yaw, INS.Pitch, INS.Gyro[Z], INS.Gyro[Y]);
+        VisionSetAltitude(INS.Yaw, INS.Pitch, INS.Gyro[Z], INS.Gyro[X]);
         VisionSetQuaternion(INS.q[0], INS.q[1], INS.q[2], INS.q[3]);
     }
 

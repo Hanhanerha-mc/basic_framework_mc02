@@ -12,6 +12,7 @@
 #include "bmi088.h"
 #include "referee_task.h"
 #include "referee_UI.h"
+#include "debug_cmd.h"
 // bsp
 #include "bsp_dwt.h"
 #include "bsp_log.h"
@@ -52,10 +53,12 @@ static Subscriber_t *shoot_feed_sub;         // 发射反馈信息订阅者
 static Shoot_Ctrl_Cmd_s shoot_cmd_send;      // 传递给发射的控制信息
 static Shoot_Upload_Data_s shoot_fetch_data; // 从发射获取的反馈信息
 
+static uint8_t *debug_cmd;         // 调试用的命令接收缓冲区指针,初始化时返回
+
 static Robot_Status_e robot_state; // 机器人整体工作状态
 
-static referee_info_t* referee_data; // 用于获取裁判系统的数据
-static Referee_Interactive_info_t ui_data; // UI数据，将底盘中的数据传入此结构体的对应变量中，UI会自动检测是否变化，对应显示UI
+// static referee_info_t* referee_data; // 用于获取裁判系统的数据
+// static Referee_Interactive_info_t ui_data; // UI数据，将底盘中的数据传入此结构体的对应变量中，UI会自动检测是否变化，对应显示UI
 
 BMI088Instance *bmi088_test; // 云台IMU
 BMI088_Data_t bmi088_data;
@@ -64,8 +67,8 @@ void RobotCMDInit()
     rc_data = RemoteControlInit(&huart5);                         // 修改为对应串口,注意如果是自研板dbus协议串口需选用添加了反相器的那个
     vision_recv_data = VisionInit(&huart10);                               // 视觉通信串口
     navigation_recv_data = NavigationProcessInit(&huart7);                      // 导航控制
-    referee_data = UITaskInit(&huart1,&ui_data);    // 裁判系统初始化,会同时初始化UI
-    // TODO 还需加入导航与裁判系统的串口
+    // referee_data = UITaskInit(&huart1,&ui_data);    // 关闭裁判系统初始化
+    debug_cmd = DebugCmdInit(&huart1); // 调试用的命令接收缓冲区
 
     gimbal_cmd_pub = PubRegister("gimbal_cmd", sizeof(Gimbal_Ctrl_Cmd_s));
     gimbal_feed_sub = SubRegister("gimbal_feed", sizeof(Gimbal_Upload_Data_s));
@@ -324,6 +327,16 @@ static void MouseKeySet()
 }
 #endif // USE_MOUSE
 
+static void Arbiter()
+{
+    if (rc_data[TEMP].data_freshness == DATA_STALE) // 遥控器数据新鲜,优先遥控器控制,后续加入视觉导航等其他模式时需要添加仲裁逻辑
+    {
+        gimbal_cmd_send.yaw = vision_recv_data->target_yaw;
+        gimbal_cmd_send.pitch = vision_recv_data->target_pitch;
+    }
+    // 目前只有遥控器控制,后续加入视觉导航等其他模式时需要添加仲裁逻辑
+}
+
 /**
  * @brief  紧急停止,包括遥控器左上侧拨轮打满/重要模块离线/双板通信失效等
  *         停止的阈值'300'待修改成合适的值,或改为开关控制.
@@ -371,6 +384,7 @@ void RobotCMDTask()
     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();
     RemoteControlSet();         // 现在全是遥控器控制
+    Arbiter();                  // 根据当前状态和接收的数据进行控制决策,现在主要是遥控器控制,后续可以加入视觉导航等其他模式
     #ifdef USE_MOUSE
     else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
         MouseKeySet();

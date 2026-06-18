@@ -23,6 +23,8 @@
 #include "referee_UI.h"
 #include "arm_math.h"
 
+#ifndef GIMBAL_BOARD
+
 /* 根据robot_def.h中的macro自动计算的参数 */
 #define HALF_WHEEL_BASE (WHEEL_BASE / 2.0f)     // 半轴距
 #define HALF_TRACK_WIDTH (TRACK_WIDTH / 2.0f)   // 半轮距
@@ -103,7 +105,7 @@ void ChassisInit()
     chassis_motor_config.controller_setting_init_config.motor_reverse_flag = MOTOR_DIRECTION_REVERSE;
     motor_rb = DJIMotorInit(&chassis_motor_config);
 
-    referee_data = UITaskInit(&huart1,&ui_data); // 裁判系统初始化,会同时初始化UI
+    // referee_data = UITaskInit(&huart1,&ui_data); // 关闭裁判系统初始化
 
     SuperCap_Init_Config_s cap_conf = {
         .can_config = {
@@ -255,3 +257,5 @@ void ChassisTask()
     CANCommSend(chasiss_can_comm, (void *)&chassis_feedback_data);
 #endif // CHASSIS_BOARD
 }
+
+#endif // GIMBAL_BOARD

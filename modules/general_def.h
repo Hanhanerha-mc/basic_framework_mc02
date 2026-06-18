@@ -14,9 +14,4 @@
 #define RPM_2_ANGLE_PER_SEC 6.0f       // ×360°/60sec
 #define RPM_2_RAD_PER_SEC 0.104719755f // ×2pi/60sec
 
-typedef enum {
-    DATA_ACTIVE = 0,   // 数据有变化（接收的数据是活跃的）
-    DATA_STALE = 1     // 数据无变化（一直发相同数据）
-} DataFreshness_e;
-
 #endif // !GENERAL_DEF_H

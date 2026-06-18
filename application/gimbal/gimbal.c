@@ -19,6 +19,8 @@ static Gimbal_Upload_Data_s gimbal_feedback_data; // 回传给cmd的云台状态
 static Gimbal_Ctrl_Cmd_s gimbal_cmd_recv;         // 来自cmd的控制信息
 
 static BMI088Instance *bmi088; // 云台IMU
+
+#define YAW_START_ANGLE 33.0f
 void GimbalInit()
 {   
     gimbal_IMU_data = INS_Init(); // IMU先初始化,获取姿态数据指针赋给yaw电机的其他数据来源
@@ -172,8 +174,8 @@ void GimbalTask()
         DJIMotorChangeFeed(yaw_motor, ANGLE_LOOP, MOTOR_FEED);
         DJIMotorChangeFeed(yaw_motor, SPEED_LOOP, MOTOR_FEED);
         DJIMotorChangeFeed(pitch_motor, ANGLE_LOOP, MOTOR_FEED);
-        DJIMotorChangeFeed(pitch_motor, SPEED_LOOP, MOTOR_FEED);
-        DJIMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw); // yaw和pitch会在robot_cmd中处理好多圈和单圈
+        DJIMotorChangeFeed(pitch_motor, SPEED_LOOP, OTHER_FEED);
+        DJIMotorSetRef(yaw_motor, gimbal_cmd_recv.yaw + YAW_START_ANGLE); // yaw和pitch会在robot_cmd中处理好多圈和单圈
         DJIMotorSetRef(pitch_motor, gimbal_cmd_recv.pitch);
         break;
     default:

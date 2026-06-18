@@ -140,14 +140,11 @@ void VisionSend()
     send_buff[1] = HEADER1;
     memcpy(&send_buff[2], &send_data, SEND_PACKET_SIZE - 4); // 数据部分,不包括帧头和CRC
     
-    crc = crc_16(send_buff + 2, SEND_PACKET_SIZE - 4); // 计算CRC16,不包括帧头和CRC本身
+    crc = crc_16(send_buff, SEND_PACKET_SIZE - 2); // 计算CRC16,不包括帧头和CRC本身
     send_buff[SEND_PACKET_SIZE - 2] = (uint8_t)(crc >> 8); // CRC高8位
     send_buff[SEND_PACKET_SIZE - 1] = (uint8_t)(crc & 0x00FF); // CRC低8位
     
-    USARTSend(vision_usart_instance, send_buff, SEND_PACKET_SIZE, USART_TRANSFER_DMA); // 和视觉通信使用IT,防止和接收使用的DMA冲突
-    // 此处为HAL设计的缺陷,DMASTOP会停止发送和接收,导致再也无法进入接收中断.
-    // 也可在发送完成中断中重新启动DMA接收,但较为复杂.因此,此处使用IT发送.
-    // 若使用了daemon,则也可以使用DMA发送.
+    USARTSend(vision_usart_instance, send_buff, SEND_PACKET_SIZE, USART_TRANSFER_DMA);
 }
 
 #endif // VISION_USE_UART

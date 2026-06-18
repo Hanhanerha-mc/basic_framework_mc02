@@ -91,6 +91,10 @@ typedef union
 } Key_t;
 #endif
 
+typedef enum {
+    DATA_ACTIVE = 0,   // 数据有变化（接收的数据是活跃的）
+    DATA_STALE = 1     // 数据无变化（一直发相同数据）
+} DataFreshness_e;
 
 // @todo 当前结构体嵌套过深,需要进行优化
 typedef struct

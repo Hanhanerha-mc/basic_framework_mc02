@@ -2,6 +2,7 @@
 #pragma once
 
 #include "FreeRTOS.h"
+#include "dmmotor.h"
 #include "task.h"
 #include "main.h"
 #include "cmsis_os.h"
@@ -48,9 +49,10 @@ void OSTaskInit()
     osThreadDef(robottask, StartROBOTTASK, osPriorityNormal, 0, 1024);
     robotTaskHandle = osThreadCreate(osThread(robottask), NULL);
 
-    osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
-    uiTaskHandle = osThreadCreate(osThread(uitask), NULL);
+    // osThreadDef(uitask, StartUITASK, osPriorityNormal, 0, 512);
+    // uiTaskHandle = osThreadCreate(osThread(uitask), NULL); // 关闭裁判系统UI任务
 
+    DMMotorControlInit(); // 达妙电机的控制初始化,包括PID参数和CAN通信配置,必须在创建任务之后调用,因为该函数中会创建电机控制的消息队列
     HTMotorControlInit(); // 没有注册HT电机则不会执行
 }
 
