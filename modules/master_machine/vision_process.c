@@ -136,10 +136,11 @@ void VisionSend()
     static uint8_t send_buff[SEND_PACKET_SIZE];
     static uint16_t crc = 0;
 
+    memcpy(&send_buff, &send_data, SEND_PACKET_SIZE - 2); // 数据部分,不包括帧头和CRC    q
     send_buff[0] = HEADER0;
     send_buff[1] = HEADER1;
-    memcpy(&send_buff[2], &send_data, SEND_PACKET_SIZE - 4); // 数据部分,不包括帧头和CRC
-    
+    send_data.work_mode = 1; // TODO: code to set flag_register
+
     crc = crc_16(send_buff, SEND_PACKET_SIZE - 2); // 计算CRC16,不包括帧头和CRC本身
     send_buff[SEND_PACKET_SIZE - 2] = (uint8_t)(crc >> 8); // CRC高8位
     send_buff[SEND_PACKET_SIZE - 1] = (uint8_t)(crc & 0x00FF); // CRC低8位

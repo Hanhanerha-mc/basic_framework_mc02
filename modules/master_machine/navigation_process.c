@@ -66,10 +66,11 @@ Navigation_Recv_s* NavigationProcessInit(UART_HandleTypeDef *_handle)
     };
     navigation_daemon_instance = DaemonRegister(&daemon_conf);
 
-    USART_Init_Config_s conf;
-    conf.module_callback = DecodeNavigation;
-    conf.recv_buff_size = RECV_PACKET_SIZE;
-    conf.usart_handle = _handle;
+    USART_Init_Config_s conf = {
+        .recv_buff_size = RECV_PACKET_SIZE,
+        .usart_handle = _handle,
+        .module_callback = DecodeNavigation,
+    };
     navigation_usart_instance = USARTRegister(&conf);
 
     return &recv_data;

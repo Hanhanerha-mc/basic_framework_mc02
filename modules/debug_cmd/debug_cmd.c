@@ -8,6 +8,13 @@ static USARTInstance *usart_instance;
 static Debug_Cmd_s *recv_data;
 static uint8_t debug_cmd[sizeof(Debug_Cmd_s) - 2]; // 不包括帧头和checksum,用于存储解析后的数据,减少memcpy的开销
 
+/**
+ * @brief 解析调试命令
+ * 
+ * 从usart_instance->recv_buff中解析调试命令,并存储到debug_cmd中,供外部调用
+ * 协议格式: [HEADER][CMD1][CMD2][CHECKSUM] 
+ * 其中CMD1和CMD2为调试命令,校验和为CMD1和CMD2的和
+*/
 static void DebugCmdDecode()
 {
     recv_data = (Debug_Cmd_s *)usart_instance->recv_buff;
@@ -38,7 +45,11 @@ uint8_t *DebugCmdInit(UART_HandleTypeDef *_handle)
     conf.module_callback = DebugCmdDecode;
 
     usart_instance = USARTRegister(&conf);
-    USARTServiceInit(usart_instance); // 启动串口服务,开始接收数据
+    // USARTServiceInit(usart_instance); // 启动串口服务,开始接收数据
     return debug_cmd;
 }
 
+uint8_t *DebugCmdGet()
+{
+    return debug_cmd;
+}

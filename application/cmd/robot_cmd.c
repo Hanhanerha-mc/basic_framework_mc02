@@ -141,6 +141,7 @@ static void RemoteControlSet()
                 case RC_SW_MID:                                          // 右侧开关状态[中],底盘跟随云台
                     gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;
                     chassis_cmd_send.chassis_mode = CHASSIS_FOLLOW_GIMBAL_YAW;
+                    chassis_cmd_send.wz = 0.2f * (float)rc_data[TEMP].rc.rocker_l_;
                     break;
                 case RC_SW_DOWN:
                     gimbal_cmd_send.gimbal_mode = GIMBAL_FREE_MODE;        // 右侧开关状态[下],小陀螺模式
@@ -173,8 +174,8 @@ static void RemoteControlSet()
         }
         #define INCREMENTAL_CONTROL // 是否增量控制,如果不开启则为绝对位置控制,需要遥控器摇杆回中时云台回中,开启后则为增量控制,摇杆回中云台保持不动
         #ifdef INCREMENTAL_CONTROL
-        gimbal_cmd_send.yaw += 0.001f * (float)rc_data[TEMP].rc.rocker_l_;
-        gimbal_cmd_send.pitch += 0.0005f * (float)rc_data[TEMP].rc.rocker_l1;
+        gimbal_cmd_send.yaw += 0.002f * (float)rc_data[TEMP].rc.rocker_l_;
+        gimbal_cmd_send.pitch += 0.002f * (float)rc_data[TEMP].rc.rocker_l1;
         #else
         gimbal_cmd_send.yaw = (float)rc_data[TEMP].rc.rocker_l_ / REMOTE_MAX * YAW_MAX_ANGLE + YAW_START_ANGLE;
         gimbal_cmd_send.pitch = (float)rc_data[TEMP].rc.rocker_l1 / REMOTE_MAX * (PITCH_MAX_ANGLE - PITCH_MIN_ANGLE) / 2 + (PITCH_MAX_ANGLE + PITCH_MIN_ANGLE) / 2;
@@ -200,6 +201,9 @@ static void RemoteControlSet()
             default:
                 while(1) LOGERROR("[RemoteControlSet] default case: %d", rc_data[TEMP].rc.switch_right);
         }
+
+    LIMIT_MIN_MAX(gimbal_cmd_send.pitch, PITCH_MIN_ANGLE, PITCH_MAX_ANGLE); // 限位
+    LIMIT_MIN_MAX(gimbal_cmd_send.yaw, YAW_MIN_ANGLE, YAW_MAX_ANGLE); // 限位
     }
     // 云台软件限位
 
@@ -211,13 +215,13 @@ static void RemoteControlSet()
             chassis_cmd_send.vx = 0;
         }
         else {
-            chassis_cmd_send.vx = (float)rc_data[TEMP].rc.rocker_r1 / 1.5; // 竖直方向
+            chassis_cmd_send.vx = (float)rc_data[TEMP].rc.rocker_r1 / 660.0f; // 竖直方向
         }
         if (abs(rc_data[TEMP].rc.rocker_r_) < RC_DEADBAND) {
             chassis_cmd_send.vy = 0;
         }
         else {
-            chassis_cmd_send.vy = (float)rc_data[TEMP].rc.rocker_r_ / 1.5; // 水平方向
+            chassis_cmd_send.vy = (float)rc_data[TEMP].rc.rocker_r_ / 660.0f; // 水平方向
         }
     }
 
@@ -329,10 +333,25 @@ static void MouseKeySet()
 
 static void Arbiter()
 {
-    if (rc_data[TEMP].data_freshness == DATA_STALE) // 遥控器数据新鲜,优先遥控器控制,后续加入视觉导航等其他模式时需要添加仲裁逻辑
+    if (rc_data[TEMP].data_freshness == DATA_ACTIVE) // 遥控器数据新鲜,优先遥控器控制,后续加入视觉导航等其他模式时需要添加仲裁逻辑
+    {
+        RemoteControlSet();
+    }
+    else if (rc_data[TEMP].data_freshness == DATA_STALE) // 视觉数据新鲜,视觉导航模式
     {
         gimbal_cmd_send.yaw = vision_recv_data->target_yaw;
         gimbal_cmd_send.pitch = vision_recv_data->target_pitch;
+        chassis_cmd_send.vx = navigation_recv_data->vx;
+        chassis_cmd_send.vy = -navigation_recv_data->vy;
+        chassis_cmd_send.wz = navigation_recv_data->wz; 
+        chassis_cmd_send.chassis_mode = navigation_recv_data->mode;
+    }
+    else if (debug_cmd[0] != 0) // 调试命令,优先级最低
+    {
+        switch (debug_cmd[1]) {
+        case 0x01:
+            
+        }
     }
     // 目前只有遥控器控制,后续加入视觉导航等其他模式时需要添加仲裁逻辑
 }
@@ -370,6 +389,7 @@ static void EmergencyHandler()
 /* 机器人核心控制任务,200Hz频率运行(必须高于视觉发送频率) */
 void RobotCMDTask()
 {
+    float start_time = DWT_GetTimeline_us();
    // BMI088Acquire(bmi088_test,&bmi088_data) ;
     // 从其他应用获取回传数据
 #ifdef ONE_BOARD
@@ -381,9 +401,8 @@ void RobotCMDTask()
     SubGetMessage(shoot_feed_sub, &shoot_fetch_data);
     SubGetMessage(gimbal_feed_sub, &gimbal_fetch_data);
 
-    // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
+//     // 根据gimbal的反馈值计算云台和底盘正方向的夹角,不需要传参,通过static私有变量完成
     CalcOffsetAngle();
-    RemoteControlSet();         // 现在全是遥控器控制
     Arbiter();                  // 根据当前状态和接收的数据进行控制决策,现在主要是遥控器控制,后续可以加入视觉导航等其他模式
     #ifdef USE_MOUSE
     else if (switch_is_up(rc_data[TEMP].rc.switch_left)) // 遥控器左侧开关状态为[上],键盘控制
@@ -391,11 +410,11 @@ void RobotCMDTask()
     #endif // USE_MOUSE
     EmergencyHandler(); // 处理模块离线和遥控器急停等紧急情况
 
-    // 设置视觉发送数据,还需增加加速度和角速度数据
-    // VisionSetFlag(chassis_fetch_data.enemy_color,,chassis_fetch_data.bullet_speed)
+//     // 设置视觉发送数据,还需增加加速度和角速度数据
+//     // VisionSetFlag(chassis_fetch_data.enemy_color,,chassis_fetch_data.bullet_speed)
 
-    // 推送消息,双板通信,视觉通信等
-    // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
+//     // 推送消息,双板通信,视觉通信等
+//     // 其他应用所需的控制数据在remotecontrolsetmode和mousekeysetmode中完成设置
 #ifdef ONE_BOARD
     PubPushMessage(chassis_cmd_pub, (void *)&chassis_cmd_send);
 #endif // ONE_BOARD
@@ -404,5 +423,12 @@ void RobotCMDTask()
 #endif // GIMBAL_BOARD
     PubPushMessage(shoot_cmd_pub, (void *)&shoot_cmd_send);
     PubPushMessage(gimbal_cmd_pub, (void *)&gimbal_cmd_send);
-    VisionSend(&vision_send_data);
+    float end = DWT_GetTimeline_us();
+    float dt = end - start_time;
+    LOGINFO("[CMD] dt: %f us", dt);
+}
+
+Gimbal_Ctrl_Cmd_s *GetGimbalCmdSendPtr()
+{
+    return &gimbal_cmd_send;
 }
